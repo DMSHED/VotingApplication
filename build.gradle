@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.2'
+    id "io.spring.dependency-management" version '1.1.7'
+    id("io.freefair.lombok") version "8.12"
+}
+
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    //netty TCP/UDP connect
+    implementation 'io.netty:netty-all:4.1.86.Final'
+
+    //swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+
+    // подключаем Liquibase для миграций
+    implementation 'org.liquibase:liquibase-core'
+
+    //dependencies management автоматически установит нужные версии
+    //spring boot starter
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    //БД
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    //тестирование
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    //для поднятия контейнера для тестирования бд
+    // https://mvnrepository.com/artifact/org.testcontainers/postgresql
+    testImplementation 'org.testcontainers:postgresql:1.20.4'
+
+}
+
+test {
+    useJUnitPlatform()
+}
