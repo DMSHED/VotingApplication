@@ -28,12 +28,15 @@ public class Vote {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "created_by")
+    private String created_by;
+
     @JoinColumn(name = "topic_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Topic topic;
 
     @Builder.Default
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "vote_results", joinColumns = @JoinColumn(name = "vote_id"))
     @MapKeyColumn(name = "name")
     @Column(name = "count")

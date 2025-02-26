@@ -26,7 +26,7 @@ public class Topic {
     private String created_by;
 
     @Builder.Default
-    @OneToMany(mappedBy = "topic", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "topic", fetch = FetchType.EAGER)
     private List<Vote> votes = new ArrayList<>();
 
 }

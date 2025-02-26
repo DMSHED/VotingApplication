@@ -33,6 +33,7 @@ public class VoteRepositoryTest extends IntegrationTestBase {
                 .name("test")
                 .description("test")
                 .topic(topic)
+                .created_by("created_by")
                 .results(Map.of(
             "Вредно",0,
                                  "Полезно",0
@@ -41,6 +42,7 @@ public class VoteRepositoryTest extends IntegrationTestBase {
         Vote vote2 = Vote.builder()
                 .name("test2")
                 .description("test")
+                .created_by("created_by")
                 .topic(topic)
                 .results(Map.of(
             "Вредно",0,

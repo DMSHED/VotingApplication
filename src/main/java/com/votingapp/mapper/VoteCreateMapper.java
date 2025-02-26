@@ -27,6 +27,7 @@ public class VoteCreateMapper implements Mapper<VoteCreateState, Vote>{
                 .description(object.getVoteDescription())
                 .topic(object.getTopic())
                 .results(res)
+                .created_by(object.getCreated_by())
                 .build();
     }
 }

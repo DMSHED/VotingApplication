@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS vote
     id SERIAL PRIMARY KEY ,
     name VARCHAR(64) NOT NULL UNIQUE ,
     description TEXT ,
-    topic_id INT REFERENCES topic (id) ON DELETE CASCADE
+    topic_id INT REFERENCES topic (id) ON DELETE CASCADE ,
+    created_by VARCHAR(32) NOT NULL
 
 );
 
