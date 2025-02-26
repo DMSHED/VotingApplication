@@ -8,7 +8,7 @@ user: postgres
 password: postgres
 docker run -itd -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -v /data:/var/lib/postgresql/data --name postgresql postgres
 
-2. Запустить Jar файл в режиме сервера 
+2. Запустить Jar файл в режиме сервера. Создал папку отдельную, куда jar закинул после build
 
 java -jar VotingApp-1.0-SNAPSHOT.jar --mode=server 
 (mode можно не указывать тогда по дефолту запустит в режиме сервера)
@@ -17,12 +17,25 @@ java -jar VotingApp-1.0-SNAPSHOT.jar --mode=server
 java -jar VotingApp-1.0-SNAPSHOT.jar --mode=client
 
 4. Все команды выполняются в терминале, такое вот приложение
-На данный момент доступно
 
+Пока у меня очень большие хендлеры, решил сначала реализовать базовый функционал, необходимый
+по ТЗ, позже разобью на сервисы и на отдельные обработчики, пока выглядит не очень, но работает
+
+1.0.1
 в режиме клиента:
 exit - выход из сессии (доступно и без добавления юзера в сессию)
 login -u=<username> добавит юзера в текущую сессию сервера и позволит выполнять остальные команды
 create topic -n=<topic_name> создат раздел
+
+1.1.0
+В режиме клиента добавлена возможность создания голосования
+create topic -t=<topic_name>
+пока без валидации
+
+
+
+
+
 
 
 

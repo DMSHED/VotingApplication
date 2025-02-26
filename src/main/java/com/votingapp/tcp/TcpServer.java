@@ -1,7 +1,8 @@
 package com.votingapp.tcp;
 
 import com.votingapp.service.TopicService;
-import com.votingapp.tcp.handler.TcpServerHandler;
+import com.votingapp.service.VoteService;
+import com.votingapp.tcp.handler.ClientRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -23,6 +24,7 @@ public class TcpServer {
     private final int port;
 
     private final TopicService topicService;
+    private final VoteService voteService;
 
     public void run(){
         EventLoopGroup bossGroup = new NioEventLoopGroup();  // Для обработки входящих подключений
@@ -38,8 +40,7 @@ public class TcpServer {
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new StringDecoder());  // Декодируем байты в строки
                             pipeline.addLast(new StringEncoder());  // Кодируем строки в байты
-                            pipeline.addLast(new TcpServerHandler(topicService));  // Обработчик входящих сообщений
-                        }
+                            pipeline.addLast(new ClientRequestHandler(topicService, voteService));                        }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)  // Максимальное количество ожидающих подключений
                     .childOption(ChannelOption.SO_KEEPALIVE, true);  // Поддержка keep-alive

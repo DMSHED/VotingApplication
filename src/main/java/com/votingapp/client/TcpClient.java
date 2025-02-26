@@ -56,7 +56,7 @@ public class TcpClient {
                         channel.writeAndFlush("exit\n");
                         break;
                     }
-                    channel.writeAndFlush(message + "\n");
+                    channel.writeAndFlush(message);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

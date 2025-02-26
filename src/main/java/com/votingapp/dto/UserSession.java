@@ -1,6 +1,5 @@
-package com.votingapp.tcp.session;
+package com.votingapp.dto;
 
-import io.netty.channel.Channel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
