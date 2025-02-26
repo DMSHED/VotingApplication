@@ -34,4 +34,13 @@ public class VoteService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    public boolean delete(Vote vote) {
+        try {
+            voteRepository.delete(vote);
+            voteRepository.flush();
+            return true;
+        } catch (RuntimeException ex) {
+            return false;
+        }
+    }
 }

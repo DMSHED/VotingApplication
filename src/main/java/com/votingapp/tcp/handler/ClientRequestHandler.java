@@ -7,7 +7,6 @@ import com.votingapp.dto.VoteCreateState;
 import com.votingapp.service.TopicService;
 import com.votingapp.service.VoteService;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.DefaultPromise;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,7 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -69,18 +67,51 @@ public class ClientRequestHandler extends BaseHandler{
             case "exit":
                 handleExit(ctx);
                 break;
-
-
+            case "delete":
+                handleDelete(ctx, parts);
+                break;
             default:
                 ctx.writeAndFlush("Unknown command\n");
         }
     }
+
+    private void handleDelete(ChannelHandlerContext ctx, String[] parts) {
+        if (parts.length == 3 && parts[1].startsWith("t=") && parts[2].startsWith("v=")) {
+            try {
+                String topicName = parts[1].substring(2).trim();
+                String voteName = parts[2].substring(2).trim();
+
+                Topic topic = topicService.findByNameIgnoreCase(topicName);
+                Vote vote = voteService.findByNameIgnoreCase(voteName);
+
+                if (vote.getCreated_by().equals(userSessions.get(ctx.name()).getUsername())) {
+                    boolean result = voteService.delete(vote);
+
+                    if (result) {
+                        ctx.writeAndFlush("Successfully deleted\n");
+                    } else {
+                        ctx.writeAndFlush("Failed to delete vote\n");
+                    }
+                } else {
+                    ctx.writeAndFlush("You are not authorized to delete this vote\n");
+                }
+
+            } catch (ResponseStatusException e) {
+                ctx.writeAndFlush("topic or vote not found\n");
+            } catch (RuntimeException e) {
+                ctx.writeAndFlush("Failed to delete vote\n");
+            }
+        } else {
+            ctx.writeAndFlush("Invalid delete vote command. You need usage: delete -t=<topic_name> -v=<vote_name>\n");
+        }
+    }
+
     //<topic (votes in topic=<count>)>
     private void handleView(ChannelHandlerContext ctx, String[] parts) {
         if (parts.length == 2 && parts[1].startsWith("t=")) {
             try {
                 String topicName = parts[1].substring(2).trim();
-                Topic topic = topicService.findByName(topicName);
+                Topic topic = topicService.findByNameIgnoreCase(topicName);
 
                 StringBuffer stringBuffer = new StringBuffer();
 
@@ -102,7 +133,7 @@ public class ClientRequestHandler extends BaseHandler{
 
                 //нужен лишь для того, чтобы проверить, что запрошенный topic существует
                 //если не существует выбросит ошибку ResponseStatusException
-                Topic topic = topicService.findByName(topicName);
+                Topic topic = topicService.findByNameIgnoreCase(topicName);
                 //получаем Vote, также, если не нашли, пробросит исключение
                 Vote vote = voteService.findByNameIgnoreCase(voteName);
 
@@ -222,7 +253,7 @@ public class ClientRequestHandler extends BaseHandler{
             String topicName = parts[1].substring(2).trim();
 
             try {
-                Topic topic = topicService.findByName(topicName);
+                Topic topic = topicService.findByNameIgnoreCase(topicName);
                 System.out.println(topic);
 
                 //создаем обьект состояния создания голосования
@@ -235,7 +266,7 @@ public class ClientRequestHandler extends BaseHandler{
                 ctx.writeAndFlush("Invalid topic name: " + topicName + "\n");
             }
         } else {
-            ctx.writeAndFlush("Invalid create vote command\n");
+            ctx.writeAndFlush("Invalid create vote command. You need usage: create vote -t=<topic_name>\n");
         }
     }
 

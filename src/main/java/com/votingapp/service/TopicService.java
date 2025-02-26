@@ -3,7 +3,6 @@ package com.votingapp.service;
 import com.votingapp.database.entity.Topic;
 import com.votingapp.database.repository.TopicRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +24,7 @@ public class TopicService {
                 .orElseThrow();
     }
 
-    public Topic findByName(String name) {
+    public Topic findByNameIgnoreCase(String name) {
         return topicRepository.findByNameIgnoreCase(name)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
