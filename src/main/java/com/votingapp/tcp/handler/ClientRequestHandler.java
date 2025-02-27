@@ -3,7 +3,7 @@ package com.votingapp.tcp.handler;
 import com.votingapp.database.entity.Topic;
 import com.votingapp.database.entity.Vote;
 import com.votingapp.dto.UserSession;
-import com.votingapp.dto.VoteCreateState;
+import com.votingapp.dto.VoteState;
 import com.votingapp.service.TopicService;
 import com.votingapp.service.VoteService;
 import io.netty.channel.ChannelHandlerContext;
@@ -24,7 +24,8 @@ public class ClientRequestHandler extends BaseHandler{
     //будет кешем для сессий юзеров
     private final Map<String, UserSession> userSessions = new ConcurrentHashMap<>();
     // кеш для состояния создания голосования конкретного юзера
-    private final Map<String, VoteCreateState> voteCreateStates = new ConcurrentHashMap<>();
+    private final Map<String, VoteState> voteStates = new ConcurrentHashMap<>();
+
 
     private final TopicService topicService;
     private final VoteService voteService;
@@ -47,10 +48,12 @@ public class ClientRequestHandler extends BaseHandler{
         }
 
         //запрашиваем из кеш, существует ли процесс/состояние для создания голосования
-        VoteCreateState state = voteCreateStates.get(ctx.name());
-
-        if (state != null) {
+        VoteState state = voteStates.get(ctx.name());
+        if (state != null && !state.getCurrentState().equals(VoteState.State.WAITING_NUMBER_VOTE)) {
             processVoteCreationInput(ctx, message, state);
+            return;
+        } else if (state != null) {
+            processVoteAnswer(ctx, message, state);
             return;
         }
 
@@ -70,8 +73,74 @@ public class ClientRequestHandler extends BaseHandler{
             case "delete":
                 handleDelete(ctx, parts);
                 break;
+            case "vote":
+                handleVote(ctx, parts);
+                break;
             default:
                 ctx.writeAndFlush("Unknown command\n");
+        }
+    }
+
+    private void processVoteAnswer(ChannelHandlerContext ctx, String message, VoteState state) {
+        if (Objects.equals(message, "cancel")) {
+            failedVoteCreation(ctx, state);
+            return;
+        }
+
+        String[] parts = message.split(" ");
+        String option = parts[0].trim();
+
+        String voteName = state.getVoteName();
+        Vote vote = voteService.findByNameIgnoreCase(voteName);
+
+        Integer count = vote.getResults().get(option);
+
+        if (count == null) {
+            failedVoteCreation(ctx, state);
+            return;
+        }
+
+        vote.getResults().put(option, count + 1);
+        voteService.update(vote);
+        ctx.writeAndFlush("Vote has been send\n");
+        voteStates.remove(ctx.name()); // Очищаем состояние после завершения
+    }
+
+    private void handleVote(ChannelHandlerContext ctx, String[] parts) {
+        if (parts.length == 3 && parts[1].startsWith("t=") && parts[2].startsWith("v=")) {
+            try {
+                String topicName = parts[1].substring(2).trim();
+                String voteName = parts[2].substring(2).trim();
+                System.out.println(0);
+                Topic topic = topicService.findByNameIgnoreCase(topicName);
+                System.out.println(1);
+                Vote vote = voteService.findByNameIgnoreCase(voteName);
+                System.out.println(2);
+                //создаем обьект состояния голосования
+                VoteState state = new VoteState(topic, userSessions.get(ctx.name()).getUsername());
+                System.out.println(3);
+                state.setVoteName(vote.getName());
+                state.setCurrentState(VoteState.State.WAITING_NUMBER_VOTE);
+
+                //помещаем в кэш так сказать, чтобы отслеживать
+                voteStates.put(ctx.name(), state);
+
+                //вывод вариантов ответа пользователю
+                StringBuffer stringBuffer = new StringBuffer();
+
+                vote.getResults().forEach((key, value) -> {
+                    stringBuffer.append("  " + key +"\n");
+                });
+                
+                ctx.writeAndFlush("Answer options: \n" + stringBuffer + "Select one of the voting options:\n");
+
+            } catch (ResponseStatusException e) {
+                ctx.writeAndFlush("topic or vote not found\n");
+            } catch (RuntimeException e) {
+            ctx.writeAndFlush("Failed to vote\n");
+            }
+        }  else {
+            ctx.writeAndFlush("Invalid vote command. You need usage: vote -t=<topic_name> -v=<vote_name>\n");
         }
     }
 
@@ -164,7 +233,7 @@ public class ClientRequestHandler extends BaseHandler{
 
     }
 
-    private void processVoteCreationInput(ChannelHandlerContext ctx, String input, VoteCreateState state) {
+    private void processVoteCreationInput(ChannelHandlerContext ctx, String input, VoteState state) {
         switch (state.getCurrentState()) {
             case WAITING_FOR_NAME:
                 if (Objects.equals(input, "cancel")) {
@@ -177,7 +246,7 @@ public class ClientRequestHandler extends BaseHandler{
                 }
 
                 state.setVoteName(input);
-                state.setCurrentState(VoteCreateState.State.WAITING_FOR_DESCRIPTION);
+                state.setCurrentState(VoteState.State.WAITING_FOR_DESCRIPTION);
                 ctx.writeAndFlush("Enter vote description or enter cancel: \n");
                 break;
             case WAITING_FOR_DESCRIPTION:
@@ -186,7 +255,7 @@ public class ClientRequestHandler extends BaseHandler{
                     return;
                 }
                 state.setVoteDescription(input);
-                state.setCurrentState(VoteCreateState.State.WAITING_FOR_OPTIONS_COUNT);
+                state.setCurrentState(VoteState.State.WAITING_FOR_OPTIONS_COUNT);
                 ctx.writeAndFlush("Enter number of options or enter cancel: \n");
                 break;
 
@@ -208,7 +277,7 @@ public class ClientRequestHandler extends BaseHandler{
                     ctx.writeAndFlush("Invalid number. Enter number of options or enter cancel: \n");
                     break;
                 }
-                state.setCurrentState(VoteCreateState.State.WAITING_FOR_OPTIONS);
+                state.setCurrentState(VoteState.State.WAITING_FOR_OPTIONS);
 
                 break;
             case WAITING_FOR_OPTIONS:
@@ -236,14 +305,14 @@ public class ClientRequestHandler extends BaseHandler{
         }
     }
 
-    private void failedVoteCreation(ChannelHandlerContext ctx, VoteCreateState state) {
-        voteCreateStates.remove(ctx.name()); // Очищаем состояние после завершения
-        ctx.writeAndFlush("Vote created stopped \n");
+    private void failedVoteCreation(ChannelHandlerContext ctx, VoteState state) {
+        voteStates.remove(ctx.name()); // Очищаем состояние после завершения
+        ctx.writeAndFlush("Interrupt!!! \n");
     }
 
-    private void completeVoteCreation(ChannelHandlerContext ctx, VoteCreateState state) {
+    private void completeVoteCreation(ChannelHandlerContext ctx, VoteState state) {
         voteService.create(state);
-        voteCreateStates.remove(ctx.name()); // Очищаем состояние после завершения
+        voteStates.remove(ctx.name()); // Очищаем состояние после завершения
         ctx.writeAndFlush("Vote created successfully in topic '" + state.getTopic().getName() + "'\n");
     }
 
@@ -256,10 +325,10 @@ public class ClientRequestHandler extends BaseHandler{
                 Topic topic = topicService.findByNameIgnoreCase(topicName);
                 System.out.println(topic);
 
-                //создаем обьект состояния создания голосования
-                VoteCreateState state = new VoteCreateState(topic, userSessions.get(ctx.name()).getUsername());
+                //создаем обьект состояния голосования
+                VoteState state = new VoteState(topic, userSessions.get(ctx.name()).getUsername());
                 //помещаем в кэш так сказать, чтобы отслеживать
-                voteCreateStates.put(ctx.name(), state);
+                voteStates.put(ctx.name(), state);
 
                 ctx.writeAndFlush("Enter vote name (unique) or enter cancel: \n");
             } catch (ResponseStatusException ex) {

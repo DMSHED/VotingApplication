@@ -1,21 +1,16 @@
 package com.votingapp.mapper;
 
-import com.votingapp.database.entity.Topic;
 import com.votingapp.database.entity.Vote;
-import com.votingapp.database.repository.TopicRepository;
-import com.votingapp.dto.VoteCreateState;
-import lombok.RequiredArgsConstructor;
+import com.votingapp.dto.VoteState;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Component
-public class VoteCreateMapper implements Mapper<VoteCreateState, Vote>{
+public class VoteCreateMapper implements Mapper<VoteState, Vote>{
     @Override
-    public Vote map(VoteCreateState object) {
+    public Vote map(VoteState object) {
 
         Map<String, Integer> res = new HashMap<>();
         for (String item : object.getOptions()) {

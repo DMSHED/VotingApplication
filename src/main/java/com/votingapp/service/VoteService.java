@@ -1,10 +1,8 @@
 package com.votingapp.service;
 
-import com.votingapp.database.entity.Topic;
 import com.votingapp.database.entity.Vote;
-import com.votingapp.database.repository.TopicRepository;
 import com.votingapp.database.repository.VoteRepository;
-import com.votingapp.dto.VoteCreateState;
+import com.votingapp.dto.VoteState;
 import com.votingapp.mapper.VoteCreateMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +20,7 @@ public class VoteService {
     private final VoteRepository voteRepository;
     private final VoteCreateMapper voteCreateMapper;
 
-    public Vote create(VoteCreateState vote) {
+    public Vote create(VoteState vote) {
         return Optional.of(vote)
                 .map(voteCreateMapper::map)
                 .map(voteRepository::save)
@@ -42,5 +40,9 @@ public class VoteService {
         } catch (RuntimeException ex) {
             return false;
         }
+    }
+
+    public void update(Vote vote) {
+        voteRepository.saveAndFlush(vote);
     }
 }
