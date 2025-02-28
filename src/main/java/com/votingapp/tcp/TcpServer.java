@@ -1,5 +1,8 @@
 package com.votingapp.tcp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.votingapp.database.entity.Topic;
 import com.votingapp.service.TopicService;
 import com.votingapp.service.VoteService;
 import com.votingapp.tcp.handler.ClientRequestHandler;
@@ -15,6 +18,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -25,6 +38,7 @@ public class TcpServer {
 
     private final TopicService topicService;
     private final VoteService voteService;
+    private final ObjectMapper objectMapper;
 
     public void run(){
         EventLoopGroup bossGroup = new NioEventLoopGroup();  // Для обработки входящих подключений
@@ -49,6 +63,36 @@ public class TcpServer {
             ChannelFuture future = bootstrap.bind(port).sync();
             log.info("TCP сервер запущен на порту {}", port);
 
+            //получение сообщения на сам же сервере
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+                while (!Thread.interrupted()) {
+                    String message = reader.readLine().trim();
+                    if ("exit".equals(message)) {
+                        log.info("Server stopped");
+                        break;
+                    }
+                    String[] parts = message.split(" ");
+
+                    if (parts.length < 2) {
+                        log.info("Invalid command");
+                        continue;
+                    }
+
+                    String command = parts[0].trim();
+                    switch (command){
+                        case "load":
+                            loadFile(parts[1].trim());
+                            break;
+                        case "save":
+                            saveFile(parts[1].trim());
+                            break;
+                        default:
+                            log.error("Unknown command {}", command);
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             // Ожидание завершения работы сервера
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
@@ -57,6 +101,34 @@ public class TcpServer {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
         }
+    }
+
+    private void saveFile(String fileName) {
+        System.out.println("save");
+        Path dirPath = Path.of("../../saveVotes");
+        try {
+            //создаем директорию
+            if (!Files.exists(dirPath)) {
+                Files.createDirectories(dirPath);
+            }
+            //полный путь к файлу
+            File file = new File(dirPath + File.separator+ fileName);
+            List<Topic> topics = topicService.findAll();
+
+            Map<String, Map<String, String>> saveResults = new HashMap<>();
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            objectMapper.writeValue(file, topics);
+
+            // Сохраняем данные в JSON формате
+            log.info("Data saved successfully to {}", file.getAbsolutePath());
+        } catch (IOException e) {
+
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void loadFile(String fileName) {
+        System.out.println("load");
     }
 
 

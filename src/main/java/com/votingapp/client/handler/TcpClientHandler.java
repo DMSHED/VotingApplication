@@ -9,7 +9,7 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         String message = (String) msg;
-        System.out.println("Получено сообщение от сервера: \n" + message);
+        System.out.println("\n" + message);
     }
 
     @Override

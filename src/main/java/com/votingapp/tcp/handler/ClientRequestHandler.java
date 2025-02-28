@@ -99,9 +99,9 @@ public class ClientRequestHandler extends BaseHandler{
             failedVoteCreation(ctx, state);
             return;
         }
+        vote.getResults().put(option, count+1);
 
-        vote.getResults().put(option, count + 1);
-        voteService.update(vote);
+        voteService.saveAndFlush(vote);
         ctx.writeAndFlush("Vote has been send\n");
         voteStates.remove(ctx.name()); // Очищаем состояние после завершения
     }

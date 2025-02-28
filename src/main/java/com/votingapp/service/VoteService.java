@@ -4,12 +4,14 @@ import com.votingapp.database.entity.Vote;
 import com.votingapp.database.repository.VoteRepository;
 import com.votingapp.dto.VoteState;
 import com.votingapp.mapper.VoteCreateMapper;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -42,7 +44,7 @@ public class VoteService {
         }
     }
 
-    public void update(Vote vote) {
+    public void saveAndFlush(Vote vote) {
         voteRepository.saveAndFlush(vote);
     }
 }

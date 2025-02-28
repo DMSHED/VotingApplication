@@ -1,15 +1,19 @@
 package com.votingapp;
 
 import com.votingapp.client.TcpClient;
+
 import com.votingapp.tcp.TcpServer;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@Slf4j
 @SpringBootApplication
 public class VotingAppApplication {
+
     public static void main(String[] args) {
         check_mode_and_start(args);
-
     }
 
     public static void check_mode_and_start(String[] args) {
@@ -42,7 +46,8 @@ public class VotingAppApplication {
     }
 
     private static void startServer(TcpServer server) {
-        System.out.println("Starting server...");
+        log.info("Starting server...");
+
         // Логика запуска сервера
         server.run();
 
@@ -50,6 +55,7 @@ public class VotingAppApplication {
 
     private static void startClient(TcpClient client) {
         System.out.println("Starting client...");
+
         // Логика запуска клиента
         client.run();
     }
