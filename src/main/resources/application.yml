@@ -25,4 +25,9 @@ client:
 tcpserver:
   port: 8080
 
+path:
+  load:
+    ../saveVotes
+  save:
+    ../saveVotes
 

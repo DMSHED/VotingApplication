@@ -39,6 +39,10 @@ public class TcpServer {
 
     @Value("${tcpserver.port}")
     private final int port;
+    @Value("${path.load}")
+    private final String loadPath;
+    @Value("${path.save}")
+    private final String savePath;
 
     private final TopicService topicService;
     private final VoteService voteService;
@@ -108,7 +112,7 @@ public class TcpServer {
     }
 
     private void saveFile(String fileName) {
-        Path dirPath = Path.of("../../saveVotes");
+        Path dirPath = Path.of(loadPath);
         try {
             //создаем директорию
             if (!Files.exists(dirPath)) {
@@ -129,7 +133,7 @@ public class TcpServer {
     }
 
     private void loadFile(String fileName) {
-        Path dirPath = Path.of("../../saveVotes");
+        Path dirPath = Path.of(savePath);
         try {
             // Создаем путь к файлу
             File file = new File(dirPath + File.separator + fileName);
