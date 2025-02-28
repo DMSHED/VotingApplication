@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.votingapp.database.entity.Topic;
+import com.votingapp.service.LoadService;
+import com.votingapp.service.SaveService;
 import com.votingapp.service.TopicService;
 import com.votingapp.service.VoteService;
 import com.votingapp.tcp.handler.ClientRequestHandler;
@@ -39,14 +41,11 @@ public class TcpServer {
 
     @Value("${tcpserver.port}")
     private final int port;
-    @Value("${path.load}")
-    private final String loadPath;
-    @Value("${path.save}")
-    private final String savePath;
 
     private final TopicService topicService;
     private final VoteService voteService;
-    private final ObjectMapper objectMapper;
+    private final LoadService loadService;
+    private final SaveService saveService;
 
     public void run(){
         EventLoopGroup bossGroup = new NioEventLoopGroup();  // Для обработки входящих подключений
@@ -89,10 +88,10 @@ public class TcpServer {
                     String command = parts[0].trim();
                     switch (command){
                         case "load":
-                            loadFile(parts[1].trim());
+                            loadService.loadFile(parts[1].trim());
                             break;
                         case "save":
-                            saveFile(parts[1].trim());
+                            saveService.saveFile(parts[1].trim());
                             break;
                         default:
                             log.error("Unknown command {}", command);
@@ -111,52 +110,4 @@ public class TcpServer {
         }
     }
 
-    private void saveFile(String fileName) {
-        Path dirPath = Path.of(loadPath);
-        try {
-            //создаем директорию
-            if (!Files.exists(dirPath)) {
-                Files.createDirectories(dirPath);
-            }
-            //полный путь к файлу
-            File file = new File(dirPath + File.separator+ fileName);
-            List<Topic> topics = topicService.findAll();
-
-            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            objectMapper.writeValue(file, topics);
-
-            // Сохраняем данные в JSON формате
-            log.info("Data saved successfully to {}", file.getAbsolutePath());
-        } catch (IOException e) {
-            log.error("Error save data: {}", e.getMessage());
-        }
-    }
-
-    private void loadFile(String fileName) {
-        Path dirPath = Path.of(savePath);
-        try {
-            // Создаем путь к файлу
-            File file = new File(dirPath + File.separator + fileName);
-
-            // Проверяем существование файла
-            if (!file.exists()) {
-                log.error("File not found: {}", file.getAbsolutePath());
-                return;
-            }
-
-            // Десериализуем данные из файла
-            List<Topic> loadedTopics = objectMapper.readValue(file, new TypeReference<List<Topic>>() {});
-
-            topicService.saveAll(loadedTopics);
-            loadedTopics.forEach(topic ->
-                    voteService.saveAll(topic.getVotes()));
-
-            log.info("Data loaded successfully from {}", file.getAbsolutePath());
-
-        } catch (IOException e) {
-            log.error("Error loading data: {}", e.getMessage());
-        }
-
-
-    }
 }
