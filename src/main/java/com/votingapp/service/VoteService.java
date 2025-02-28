@@ -1,5 +1,6 @@
 package com.votingapp.service;
 
+import com.votingapp.database.entity.Topic;
 import com.votingapp.database.entity.Vote;
 import com.votingapp.database.repository.VoteRepository;
 import com.votingapp.dto.VoteState;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,5 +48,16 @@ public class VoteService {
 
     public void saveAndFlush(Vote vote) {
         voteRepository.saveAndFlush(vote);
+    }
+
+    public void saveAll(List<Vote> votes) {
+        for (Vote vote : votes) {
+            if (vote.getId() == null) { // Если объект новый
+                Optional<Vote> existingTopic = voteRepository.findByNameIgnoreCase(vote.getName());
+                // Обновляем существующий объект
+                existingTopic.ifPresent(value -> vote.setId(value.getId()));
+            }
+        }
+        voteRepository.saveAll(votes);
     }
 }

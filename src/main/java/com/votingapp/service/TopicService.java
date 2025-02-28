@@ -35,4 +35,14 @@ public class TopicService {
     }
 
 
+    public void saveAll(List<Topic> topics) {
+        for (Topic topic : topics) {
+            if (topic.getId() == null) { // Если объект новый
+                Optional<Topic> existingTopic = topicRepository.findByNameIgnoreCase(topic.getName());
+                // Обновляем существующий объект
+                existingTopic.ifPresent(value -> topic.setId(value.getId()));
+            }
+        }
+        topicRepository.saveAll(topics);
+    }
 }

@@ -1,7 +1,6 @@
 package com.votingapp.database.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,9 +14,9 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "topic")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "name")
 public class Topic {
-    // id, name, created_by
+
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -28,6 +27,7 @@ public class Topic {
     @Column(name = "created_by")
     private String created_by;
 
+    @JsonManagedReference // Для родительской стороны
     @Builder.Default
     @OneToMany(mappedBy = "topic", fetch = FetchType.EAGER)
     private List<Vote> votes = new ArrayList<>();

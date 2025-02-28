@@ -1,5 +1,6 @@
 package com.votingapp.tcp;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.votingapp.database.entity.Topic;
@@ -24,9 +25,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Component
@@ -104,7 +108,6 @@ public class TcpServer {
     }
 
     private void saveFile(String fileName) {
-        System.out.println("save");
         Path dirPath = Path.of("../../saveVotes");
         try {
             //создаем директорию
@@ -115,21 +118,41 @@ public class TcpServer {
             File file = new File(dirPath + File.separator+ fileName);
             List<Topic> topics = topicService.findAll();
 
-            Map<String, Map<String, String>> saveResults = new HashMap<>();
             objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
             objectMapper.writeValue(file, topics);
 
             // Сохраняем данные в JSON формате
             log.info("Data saved successfully to {}", file.getAbsolutePath());
         } catch (IOException e) {
-
-            System.out.println(e.getMessage());
+            log.error("Error save data: {}", e.getMessage());
         }
     }
 
     private void loadFile(String fileName) {
-        System.out.println("load");
+        Path dirPath = Path.of("../../saveVotes");
+        try {
+            // Создаем путь к файлу
+            File file = new File(dirPath + File.separator + fileName);
+
+            // Проверяем существование файла
+            if (!file.exists()) {
+                log.error("File not found: {}", file.getAbsolutePath());
+                return;
+            }
+
+            // Десериализуем данные из файла
+            List<Topic> loadedTopics = objectMapper.readValue(file, new TypeReference<List<Topic>>() {});
+
+            topicService.saveAll(loadedTopics);
+            loadedTopics.forEach(topic ->
+                    voteService.saveAll(topic.getVotes()));
+
+            log.info("Data loaded successfully from {}", file.getAbsolutePath());
+
+        } catch (IOException e) {
+            log.error("Error loading data: {}", e.getMessage());
+        }
+
+
     }
-
-
 }

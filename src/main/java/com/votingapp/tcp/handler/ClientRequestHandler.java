@@ -111,11 +111,9 @@ public class ClientRequestHandler extends BaseHandler{
             try {
                 String topicName = parts[1].substring(2).trim();
                 String voteName = parts[2].substring(2).trim();
-                System.out.println(0);
+
                 Topic topic = topicService.findByNameIgnoreCase(topicName);
-                System.out.println(1);
                 Vote vote = voteService.findByNameIgnoreCase(voteName);
-                System.out.println(2);
                 //создаем обьект состояния голосования
                 VoteState state = new VoteState(topic, userSessions.get(ctx.name()).getUsername());
                 System.out.println(3);

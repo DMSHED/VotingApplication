@@ -1,55 +1,43 @@
 [ {
-  "name" : "test",
-  "id" : 1,
-  "created_by" : "username",
+  "name" : "teste",
+  "created_by" : "username12eqw",
   "votes" : [ {
     "name" : "test",
-    "id" : 2,
     "description" : "test",
     "created_by" : "dm",
-    "topic" : "test",
     "results" : {
-      "q" : 6,
-      "w" : 0
+      "q" : 6123,
+      "w" : 2
     }
   }, {
-    "name" : "w",
-    "id" : 4,
+    "name" : "wqwe",
     "description" : "w",
     "created_by" : "dn",
-    "topic" : "test",
     "results" : {
-      "w" : 0
+      "w" : 123
     }
   }, {
     "name" : "l",
-    "id" : 6,
     "description" : "l",
     "created_by" : "dm",
-    "topic" : "test",
     "results" : {
-      "e" : 0
+      "e" : 1000000000
     }
   }, {
     "name" : "n",
-    "id" : 7,
     "description" : "n",
     "created_by" : "t",
-    "topic" : "test",
     "results" : {
-      "e" : 0
+      "e" : 942
     }
   } ]
 }, {
   "name" : "test2",
-  "id" : 4,
   "created_by" : "dm",
   "votes" : [ {
     "name" : "qwe",
-    "id" : 8,
     "description" : "qwe",
     "created_by" : "asd",
-    "topic" : "test2",
     "results" : {
       "q" : 0,
       "w" : 0
@@ -57,19 +45,15 @@
   } ]
 }, {
   "name" : "test3",
-  "id" : 5,
   "created_by" : "dm",
   "votes" : [ ]
 }, {
   "name" : "qwe",
-  "id" : 7,
   "created_by" : "s",
   "votes" : [ {
     "name" : "s",
-    "id" : 9,
     "description" : "s",
     "created_by" : ";DROP TABLE VOTE;",
-    "topic" : "qwe",
     "results" : {
       "q" : 0,
       "w" : 0
@@ -77,14 +61,11 @@
   } ]
 }, {
   "name" : "Alina",
-  "id" : 10,
   "created_by" : "dm",
   "votes" : [ {
     "name" : "Вонючк�vonychkaDima",
-    "id" : 11,
     "description" : "test",
     "created_by" : "dm",
-    "topic" : "Alina",
     "results" : {
       "net" : 0,
       "da" : 0
